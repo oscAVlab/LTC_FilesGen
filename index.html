@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LTC Generator v1.1 | OSC_lab</title>
+    <title>LTC Generator v1.1.1 | OSC_lab</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,11 +14,10 @@
         body { 
             font-family: var(--font-family); font-weight: 100; background: var(--bg); color: #e1e1e6; 
             display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 10px;
-            overflow-x: hidden;
         }
         
         .card { 
-            background: var(--card); padding: 2rem; width: 100%; max-width: 460px; 
+            background: var(--card); padding: 2.5rem; width: 100%; max-width: 460px; 
             border: 1px solid #2d303d; box-shadow: 0 20px 40px rgba(0,0,0,0.6); box-sizing: border-box;
             border-radius: 0;
         }
@@ -27,9 +26,9 @@
         
         label { display: block; font-size: 0.6rem; color: #ffffff; margin-bottom: 0.8rem; text-transform: uppercase; letter-spacing: 2px; font-weight: 100; }
 
-        /* Estilo de la Rueda (Picker) */
         .picker-row { display: flex; align-items: center; justify-content: center; background: #0a0c10; border: 1px solid #2d303d; margin-bottom: 1.5rem; position: relative; height: 110px; overflow: hidden; }
-        .picker-row::before { content: ""; position: absolute; top: 38px; left: 0; width: 100%; height: 34px; background: rgba(0, 255, 204, 0.05); border-top: 1px solid rgba(0, 255, 204, 0.2); border-bottom: 1px solid rgba(0, 255, 204, 0.2); pointer-events: none; }
+        /* Líneas guía del centro */
+        .picker-row::before { content: ""; position: absolute; top: 38px; left: 0; width: 100%; height: 34px; background: rgba(0, 255, 204, 0.05); border-top: 1px solid rgba(0, 255, 204, 0.2); border-bottom: 1px solid rgba(0, 255, 204, 0.2); pointer-events: none; z-index: 10; }
 
         .wheel { 
             flex: 1; height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory; 
@@ -42,9 +41,6 @@
             scroll-snap-align: center; font-size: 1.2rem; transition: 0.2s; opacity: 0.2; color: #fff;
         }
         .wheel-item.active { opacity: 1; color: var(--accent); font-weight: 700; transform: scale(1.1); }
-        .wheel-spacer { height: 38px; min-height: 38px; } /* Para que el primer y último item centren */
-
-        .unit-tag { font-size: 0.5rem; color: rgba(255,255,255,0.5); position: absolute; bottom: 5px; text-transform: uppercase; }
 
         .separator { color: var(--accent); font-weight: 700; font-size: 1.2rem; padding: 0 2px; margin-top: -10px; }
 
@@ -66,9 +62,9 @@
 <body>
 
 <div class="card">
-    <h1>LTC Generator v1.1 | OSC_lab</h1>
+    <h1>LTC Generator v1.1.1 | OSC_lab</h1>
     
-    <label>Offset Inicial (H:M:S:F)</label>
+    <label>Offset Inicial (Horas : Minutos : Segundos : Frames)</label>
     <div class="picker-row">
         <div class="wheel" id="offH"></div><div class="separator">:</div>
         <div class="wheel" id="offM"></div><div class="separator">:</div>
@@ -76,7 +72,7 @@
         <div class="wheel" id="offF"></div>
     </div>
     
-    <label>Duración por Archivo (H:M:S)</label>
+    <label>Duración (Horas : Minutos : Segundos)</label>
     <div class="picker-row">
         <div class="wheel" id="durH"></div><div class="separator">:</div>
         <div class="wheel" id="durM"></div><div class="separator">:</div>
@@ -105,15 +101,15 @@
 
     <div class="multi-section">
         <label style="color: var(--accent);">Multi-Export & Intervalo</label>
-        <div class="picker-row" style="height: 80px;">
+        <div class="picker-row" style="height: 90px;">
             <div class="wheel" id="numFiles"></div>
-            <div style="width: 20px;"></div>
+            <div style="width: 30px;"></div>
             <div class="wheel" id="intH"></div><div class="separator">:</div>
             <div class="wheel" id="intM"></div>
         </div>
-        <div style="display:flex; justify-content:space-between; padding: 0 15px; margin-top:-10px; margin-bottom:15px; font-size:0.5rem; color:rgba(255,255,255,0.4)">
-            <span>Cantidad Archivos</span>
-            <span>Intervalo (H:M)</span>
+        <div style="display:flex; justify-content:space-between; padding: 0 15px; margin-top:-10px; margin-bottom:15px; font-size:0.6rem; color:rgba(255,255,255,0.8)">
+            <span>CANTIDAD</span>
+            <span>INTERVALO (H:M)</span>
         </div>
     </div>
 
@@ -123,37 +119,64 @@
     </div>
 
     <button id="mainBtn" onclick="processBatch()">GENERAR WAV</button>
-    <div class="footer">PRO TOOLS SYNC // OSC_LAB PROTOCOL v1.1</div>
+    <div class="footer">SIGNAL GENERATOR // OSC_LAB PROTOCOL v1.1.1</div>
 </div>
 
 <script>
-// --- LÓGICA DE RUEDAS (Drum Picker) ---
+const ITEM_HEIGHT = 34;
 const pickers = {};
 
-function createWheel(id, min, max, initial) {
+// Crea una rueda con efecto bucle infinito (triplicando datos)
+function createWheel(id, min, max, initial, isInfinite = true) {
     const el = document.getElementById(id);
-    el.innerHTML = '<div class="wheel-spacer"></div>';
-    for(let i=min; i<=max; i++) {
-        const item = document.createElement('div');
-        item.className = 'wheel-item';
-        item.innerText = i.toString().padStart(2, '0');
-        el.appendChild(item);
-    }
-    el.innerHTML += '<div class="wheel-spacer"></div>';
+    const range = max - min + 1;
+    el.innerHTML = '';
     
-    // Listener de scroll para activar item central
+    // Añadimos 3 sets de datos para permitir el loop infinito
+    const sets = isInfinite ? 3 : 1;
+    
+    // Spacers iniciales para centrado
+    if(!isInfinite) el.innerHTML += '<div style="height:38px"></div>';
+
+    for(let s=0; s<sets; s++) {
+        for(let i=min; i<=max; i++) {
+            const item = document.createElement('div');
+            item.className = 'wheel-item';
+            item.innerText = i.toString().padStart(2, '0');
+            el.appendChild(item);
+        }
+    }
+    
+    if(!isInfinite) el.innerHTML += '<div style="height:38px"></div>';
+
     el.onscroll = () => {
-        const index = Math.round(el.scrollTop / 34);
+        const scrollPos = el.scrollTop;
+        const totalHeight = range * ITEM_HEIGHT;
+        
+        // Lógica de bucle infinito: si llegamos a los extremos, saltamos al centro
+        if (isInfinite) {
+            if (scrollPos < totalHeight) {
+                el.scrollTop = scrollPos + totalHeight;
+            } else if (scrollPos > totalHeight * 2) {
+                el.scrollTop = scrollPos - totalHeight;
+            }
+        }
+
+        // Detectar item activo
+        const index = Math.round(el.scrollTop / ITEM_HEIGHT);
         const items = el.querySelectorAll('.wheel-item');
         items.forEach((it, idx) => {
             if(idx === index) it.classList.add('active');
             else it.classList.remove('active');
         });
-        pickers[id] = index + min;
+        
+        // Guardamos el valor real (módulo del rango)
+        pickers[id] = (index % range) + min;
     };
     
-    // Posición inicial
-    setTimeout(() => { el.scrollTop = (initial - min) * 34; }, 100);
+    // Posición inicial (en el set del medio si es infinito)
+    const startPos = isInfinite ? (range + (initial - min)) * ITEM_HEIGHT : (initial - min) * ITEM_HEIGHT;
+    setTimeout(() => { el.scrollTop = startPos; }, 50);
 }
 
 function updateFPSLogic() {
@@ -162,28 +185,29 @@ function updateFPSLogic() {
     if (fps !== "29.97") { sync.value = "NDF"; sync.disabled = true; } 
     else { sync.disabled = false; }
     
-    // Reconstruir rueda de Frames
     const maxF = Math.round(parseFloat(fps)) - 1;
-    createWheel('offF', 0, maxF, 0);
+    createWheel('offF', 0, maxF, 0); // Frames rotan según FPS
 }
 
-// Inicialización de todas las ruedas
 function initAll() {
+    // Offset
     createWheel('offH', 0, 23, 0);
     createWheel('offM', 0, 59, 0);
     createWheel('offS', 0, 59, 0);
     createWheel('offF', 0, 29, 0);
     
+    // Duración
     createWheel('durH', 0, 23, 0);
     createWheel('durM', 0, 59, 5);
     createWheel('durS', 0, 59, 0);
     
-    createWheel('numFiles', 1, 50, 1);
+    // Multi (Cantidad no es infinita, es una lista lineal)
+    createWheel('numFiles', 1, 50, 1, false);
     createWheel('intH', 0, 23, 1);
     createWheel('intM', 0, 59, 0);
 }
 
-// --- LÓGICA DE GENERACIÓN (Core v1.1) ---
+// --- LÓGICA DE NOMBRES Y GENERACIÓN ---
 
 function formatCleanName(h, m, s, f = 0) {
     let parts = [];
@@ -191,7 +215,7 @@ function formatCleanName(h, m, s, f = 0) {
     if (m > 0) parts.push(m + 'm');
     if (s > 0) parts.push(s + 's');
     if (f > 0) parts.push(f + 'f');
-    return parts.length > 0 ? parts.join(' ') : "0s";
+    return parts.length > 0 ? parts.join(' ') : ""; // Devuelve vacío si todo es 0
 }
 
 function timeToAbsFrame(h, m, s, f, fps, isDF) {
@@ -208,26 +232,26 @@ async function processBatch() {
     const isDF = syncModeVal === "DF";
     const fpsVal = document.getElementById('fps').value;
     const fpsNum = parseFloat(fpsVal);
-    
+    const sr = parseInt(document.getElementById('sr').value);
+    const bitDepth = parseInt(document.getElementById('bitDepth').value);
+
     const numFiles = pickers['numFiles'];
     const off = { h: pickers['offH'], m: pickers['offM'], s: pickers['offS'], f: pickers['offF'] };
     const dur = { h: pickers['durH'], m: pickers['durM'], s: pickers['durS'] };
     const interval = { h: pickers['intH'], m: pickers['intM'] };
 
     const durTotalSecs = (dur.h * 3600) + (dur.m * 60) + dur.s;
-    const sr = parseInt(document.getElementById('sr').value);
-    const bitDepth = parseInt(document.getElementById('bitDepth').value);
-
     if (durTotalSecs <= 0) { alert("Duración inválida"); return; }
+    
     btn.disabled = true;
-
     const cleanDur = formatCleanName(dur.h, dur.m, dur.s);
     const fpsSuffix = ` _ ${fpsVal} ${syncModeVal}fps`;
 
     if (numFiles === 1) {
+        btn.innerText = "GENERANDO...";
         const startFrame = timeToAbsFrame(off.h, off.m, off.s, off.f, fpsNum, isDF);
         const wav = generateAudio(startFrame, durTotalSecs, sr, bitDepth, isDF, fpsNum);
-        const name = `LTC_Off ${formatCleanName(off.h, off.m, off.s, off.f)} _ Dur ${cleanDur}${fpsSuffix} | oscLAB.wav`;
+        const name = `LTC_Off ${formatCleanName(off.h, off.m, off.s, off.f) || "0s"} _ Dur ${cleanDur || "0s"}${fpsSuffix} | oscLAB.wav`;
         downloadBlob(new Blob([wav]), name);
     } else {
         const zip = new JSZip();
@@ -239,7 +263,7 @@ async function processBatch() {
 
             const startFrame = timeToAbsFrame(curH, curM, off.s, off.f, fpsNum, isDF);
             const wav = generateAudio(startFrame, durTotalSecs, sr, bitDepth, isDF, fpsNum);
-            const name = `${i+1}_LTC_Off ${formatCleanName(curH, curM, off.s, off.f)} _ Dur ${cleanDur}${fpsSuffix} | oscLAB.wav`;
+            const name = `${i+1}_LTC_Off ${formatCleanName(curH, curM, off.s, off.f) || "0s"} _ Dur ${cleanDur || "0s"}${fpsSuffix} | oscLAB.wav`;
             zip.file(name, wav);
             await new Promise(r => setTimeout(r, 30));
         }
@@ -249,7 +273,7 @@ async function processBatch() {
     btn.disabled = false; btn.innerText = "GENERAR WAV";
 }
 
-// Reutilizamos motores de audio v1 (estables)
+// Motores de Audio SMPTE
 function buildBits(fIdx, fps, isDF) {
     const bits = new Array(80).fill(0);
     if (isDF && fps === 30) {
@@ -271,7 +295,9 @@ function buildBits(fIdx, fps, isDF) {
 }
 
 function generateAudio(startF, dur, sr, bitDepth, isDF, fps) {
-    const samples = Math.floor(dur * sr), buffer = new Float32Array(samples), spf = sr / fps, spb = spf / 80;
+    const totalSamples = Math.floor(dur * sr);
+    const buffer = new Float32Array(totalSamples);
+    const spf = sr / fps, spb = spf / 80;
     let phase = 1;
     for (let i = 0; i < Math.ceil(dur * fps); i++) {
         const bits = buildBits(startF + i, Math.round(fps), isDF);
@@ -303,7 +329,6 @@ function createWav(samples, sr, bitDepth) {
 
 function downloadBlob(blob, name) { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; a.click(); }
 
-// Inicio
 initAll();
 updateFPSLogic();
 </script>
