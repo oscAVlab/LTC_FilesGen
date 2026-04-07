@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LTC Generator v1 | OSC_lab</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --accent: #00ffcc; --bg: #0f1115; --card: #1c1e26; --font-family: 'Roboto', sans-serif; }
+        body { font-family: var(--font-family); font-weight: 100; background: var(--bg); color: #e1e1e6; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 10px; }
+        .card { background: var(--card); padding: 2.5rem; width: 100%; max-width: 440px; border: 1px solid #2d303d; box-shadow: 0 20px 40px rgba(0,0,0,0.4); box-sizing: border-box; border-radius: 0; }
+        h1 { color: var(--accent); margin: 0 0 1.5rem; font-size: 1rem; text-align: center; letter-spacing: 3px; border-bottom: 1px solid #2d303d; padding-bottom: 1rem; font-weight: 100; }
+        label { display: block; font-size: 0.65rem; color: #ffffff; margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 100; }
+        .time-group { display: flex; align-items: center; gap: 5px; margin-bottom: 1.2rem; }
+        .time-box { flex: 1; display: flex; flex-direction: column; align-items: center; }
+        input[type=number] { width: 100%; text-align: center; padding: 0.8rem 0; background: #0f1115; border: 1px solid #2d303d; color: #fff; font-family: var(--font-family); font-size: 1.1rem; border-radius: 0; outline: none; font-weight: 100; }
+        .time-box span, .unit-label span { font-size: 0.65rem; color: rgba(255, 255, 255, 0.8); margin-top: 4px; text-transform: uppercase; }
+        .separator { color: var(--accent); font-weight: 700; margin-bottom: 18px; }
+        select { width: 100%; padding: 0.8rem; background: #0f1115; border: 1px solid #2d303d; color: #fff; border-radius: 0; margin-bottom: 1.2rem; font-family: var(--font-family); outline: none; font-weight: 100; }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .multi-section { border-top: 1px solid #333; margin-top: 1rem; padding-top: 1rem; }
+        button { width: 100%; padding: 1.2rem; font-size: 1.25rem; font-weight: 700; background: var(--accent); border: none; color: #0f1115; border-radius: 8px; cursor: pointer; transition: 0.3s; margin-top: 10px; text-transform: uppercase; }
+        button:hover { background: #00e6b8; transform: translateY(-2px); }
+        button:disabled { background: #444; color: #888; cursor: wait; }
+        .footer { text-align: center; font-size: 0.6rem; color: #475569; margin-top: 2rem; letter-spacing: 1px; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>LTC Generator v1 | OSC_lab</h1>
+    
+    <label>Offset Inicial</label>
+    <div class="time-group">
+        <div class="time-box"><input type="number" id="offH" value="0"><span>Horas</span></div><div class="separator">:</div>
+        <div class="time-box"><input type="number" id="offM" value="0"><span>Minutos</span></div><div class="separator">:</div>
+        <div class="time-box"><input type="number" id="offS" value="0"><span>Segundos</span></div><div class="separator">:</div>
+        <div class="time-box"><input type="number" id="offF" value="0"><span>Frames</span></div>
+    </div>
+    
+    <label>Duración por Archivo</label>
+    <div class="time-group">
+        <div class="time-box"><input type="number" id="durH" value="0"><span>Horas</span></div><div class="separator">:</div>
+        <div class="time-box"><input type="number" id="durM" value="5"><span>Minutos</span></div><div class="separator">:</div>
+        <div class="time-box"><input type="number" id="durS" value="0"><span>Segundos</span></div>
+    </div>
+
+    <div class="row">
+        <div>
+            <label>FPS</label>
+            <select id="fps" onchange="updateSyncOptions()">
+                <option value="23.976">23.976</option>
+                <option value="24">24</option>
+                <option value="25">25</option>
+                <option value="29.97" selected>29.97</option>
+                <option value="30">30</option>
+            </select>
+        </div>
+        <div>
+            <label>Modo Sync</label>
+            <select id="syncMode">
+                <option value="NDF" selected>Non-Drop (NDF)</option>
+                <option value="DF">Drop Frame (DF)</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="multi-section">
+        <label style="color: var(--accent); margin-bottom: 1rem;">Opciones Multi-Export</label>
+        <div class="row">
+            <div class="time-box">
+                <label style="width:100%; text-align:left">Nº Archivos</label>
+                <input type="number" id="numFiles" value="1" min="1">
+                <span>Cantidad</span>
+            </div>
+            <div class="time-box">
+                <label style="width:100%; text-align:left">Intervalo</label>
+                <div class="time-group" style="margin-bottom:0; width:100%">
+                    <input type="number" id="intH" value="1" style="flex:1">
+                    <input type="number" id="intM" value="0" style="flex:1">
+                </div>
+                <div class="unit-label" style="display:flex; width:100%; justify-content:space-around;"><span>Horas</span><span>Minutos</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row" style="margin-top:15px">
+        <div><label>Bit Depth</label><select id="bitDepth"><option value="16">16-bit</option><option value="24" selected>24-bit</option></select></div>
+        <div><label>Sample Rate</label><select id="sr"><option value="44100">44.1 kHz</option><option value="48000" selected>48 kHz</option><option value="96000">96 kHz</option></select></div>
+    </div>
+
+    <button id="mainBtn" onclick="processBatch()">GENERAR WAV</button>
+    <div class="footer">SIGNAL GENERATOR // OSC_LAB PROTOCOL</div>
+</div>
+
+<script>
+function updateSyncOptions() {
+    const fps = document.getElementById('fps').value;
+    const sync = document.getElementById('syncMode');
+    if (fps !== "29.97") { sync.value = "NDF"; sync.disabled = true; } else { sync.disabled = false; }
+    document.getElementById('offF').max = Math.round(parseFloat(fps)) - 1;
+}
+
+function formatCleanName(h, m, s, f = 0) {
+    let parts = [];
+    if (h > 0) parts.push(h + 'h');
+    if (m > 0) parts.push(m + 'm');
+    if (s > 0) parts.push(s + 's');
+    if (f > 0) parts.push(f + 'f');
+    return parts.length > 0 ? parts.join(' ') : "0s";
+}
+
+function timeToAbsFrame(h, m, s, f, fps, isDF) {
+    const fpsInt = Math.round(fps);
+    if (!isDF) return (h * 3600 + m * 60 + s) * fpsInt + f;
+    const totalMinutes = (60 * h) + m;
+    const drops = 2 * (totalMinutes - Math.floor(totalMinutes / 10));
+    return ((h * 3600 + m * 60 + s) * fpsInt + f) - drops;
+}
+
+async function processBatch() {
+    const btn = document.getElementById('mainBtn');
+    const numFiles = parseInt(document.getElementById('numFiles').value) || 1;
+    const syncModeVal = document.getElementById('syncMode').value;
+    const isDF = syncModeVal === "DF";
+    const fpsVal = document.getElementById('fps').value;
+    const fpsNum = parseFloat(fpsVal);
+    const sr = parseInt(document.getElementById('sr').value);
+    const bitDepth = parseInt(document.getElementById('bitDepth').value);
+
+    const offH = parseInt(document.getElementById('offH').value) || 0;
+    const offM = parseInt(document.getElementById('offM').value) || 0;
+    const offS = parseInt(document.getElementById('offS').value) || 0;
+    const offF = parseInt(document.getElementById('offF').value) || 0;
+
+    const durH = parseInt(document.getElementById('durH').value) || 0;
+    const durM = parseInt(document.getElementById('durM').value) || 0;
+    const durS = parseInt(document.getElementById('durS').value) || 0;
+    const durTotalSecs = (durH * 3600) + (durM * 60) + durS;
+
+    const intH = parseInt(document.getElementById('intH').value) || 0;
+    const intM = parseInt(document.getElementById('intM').value) || 0;
+
+    btn.disabled = true;
+    const cleanDur = formatCleanName(durH, durM, durS);
+    
+    // Naming suffix: " _ 29.97 NDFfps" o " _ 29.97 DFfps"
+    const fpsSuffix = ` _ ${fpsVal} ${syncModeVal}fps`;
+    
+    if (numFiles === 1) {
+        btn.innerText = "GENERANDO...";
+        const startFrame = timeToAbsFrame(offH, offM, offS, offF, fpsNum, isDF);
+        const wavBuffer = generateAudio(startFrame, durTotalSecs, sr, bitDepth, isDF, fpsNum);
+        const name = `LTC_Off ${formatCleanName(offH, offM, offS, offF)} _ Dur ${cleanDur}${fpsSuffix} | oscLAB.wav`;
+        downloadBlob(new Blob([wavBuffer]), name);
+    } else {
+        const zip = new JSZip();
+        for (let i = 0; i < numFiles; i++) {
+            btn.innerText = `PROCESANDO ${i+1}/${numFiles}...`;
+            let curH = offH + (i * intH), curM = offM + (i * intM);
+            while (curM >= 60) { curH++; curM -= 60; }
+            curH %= 24;
+            const startFrame = timeToAbsFrame(curH, curM, offS, offF, fpsNum, isDF);
+            const wavBuffer = generateAudio(startFrame, durTotalSecs, sr, bitDepth, isDF, fpsNum);
+            const name = `${i+1}_LTC_Off ${formatCleanName(curH, curM, offS, offF)} _ Dur ${cleanDur}${fpsSuffix} | oscLAB.wav`;
+            zip.file(name, wavBuffer);
+            await new Promise(r => setTimeout(r, 50));
+        }
+        btn.innerText = "COMPRIMIENDO...";
+        const content = await zip.generateAsync({type:"blob"});
+        downloadBlob(content, `LTC_Bundle(${numFiles}files at ${fpsVal}${syncModeVal}) | oscLAB.zip`);
+    }
+    btn.disabled = false; btn.innerText = "GENERAR WAV";
+}
+
+function generateAudio(startF, dur, sr, bitDepth, isDF, fps) {
+    const totalSamples = Math.floor(dur * sr);
+    const buffer = new Float32Array(totalSamples);
+    const spf = sr / fps, spb = spf / 80;
+    let phase = 1;
+    for (let i = 0; i < Math.ceil(dur * fps); i++) {
+        const bits = buildBits(startF + i, Math.round(fps), isDF);
+        for (let b = 0; b < 80; b++) {
+            const bS = Math.floor(i * spf + b * spb), bE = Math.floor(i * spf + (b+1) * spb);
+            const mid = Math.floor((bS + bE) / 2);
+            for (let s = bS; s < bE; s++) {
+                if (s === bS) phase *= -1;
+                if (bits[b] === 1 && s === mid) phase *= -1;
+                if (s < buffer.length) buffer[s] = phase * 0.5;
+            }
+        }
+    }
+    return createWav(buffer, sr, bitDepth);
+}
+
+function buildBits(fIdx, fps, isDF) {
+    const bits = new Array(80).fill(0);
+    if (isDF && fps === 30) {
+        const drop = 2, fPM = 1798, fP10M = 17982;
+        const d = Math.floor(fIdx / fP10M), m = fIdx % fP10M;
+        fIdx += (9 * drop * d) + (drop * Math.floor((m - drop) / fPM));
+    }
+    const ff = fIdx % fps, ss = Math.floor(fIdx / fps) % 60;
+    const mm = Math.floor(fIdx / (fps * 60)) % 60, hh = Math.floor(fIdx / (fps * 3600)) % 24;
+    const writeBCD = (val, start, tens) => {
+        const u = val % 10, t = Math.floor(val / 10);
+        for(let i=0; i<4; i++) bits[start+i] = (u >> i) & 1;
+        for(let i=0; i<tens; i++) bits[start+8+i] = (t >> i) & 1;
+    };
+    writeBCD(ff, 0, 2); if (isDF) bits[10] = 1;
+    writeBCD(ss, 16, 3); writeBCD(mm, 32, 3); writeBCD(hh, 48, 2);
+    const sync = [0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,1];
+    for(let i=0; i<16; i++) bits[64+i] = sync[i];
+    return bits;
+}
+
+function createWav(samples, sr, bitDepth) {
+    const bytes = bitDepth / 8, dataSize = samples.length * bytes;
+    const ab = new ArrayBuffer(44 + dataSize), view = new DataView(ab);
+    const writeS = (o, str) => { for(let i=0; i<str.length; i++) view.setUint8(o+i, str.charCodeAt(i)); };
+    writeS(0, 'RIFF'); view.setUint32(4, 36 + dataSize, true); writeS(8, 'WAVE'); writeS(12, 'fmt ');
+    view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+    view.setUint32(24, sr, true); view.setUint32(28, sr * bytes, true);
+    view.setUint16(32, bytes, true); view.setUint16(34, bitDepth, true); writeS(36, 'data');
+    view.setUint32(40, dataSize, true);
+    for (let i=0; i<samples.length; i++) {
+        let v = Math.max(-1, Math.min(1, samples[i])), off = 44 + i * bytes;
+        if (bitDepth === 16) view.setInt16(off, v * 0x7FFF, true);
+        else { let s24 = Math.floor(v * 0x7FFFFF); view.setUint8(off, s24 & 0xFF); view.setUint8(off+1, (s24>>8) & 0xFF); view.setUint8(off+2, (s24>>16) & 0xFF); }
+    }
+    return ab;
+}
+
+function downloadBlob(blob, name) {
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; a.click();
+}
+updateSyncOptions();
+</script>
+</body>
+</html>
