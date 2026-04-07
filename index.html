@@ -94,7 +94,7 @@
         <div><label>Sample Rate</label><select id="sr"><option value="44100">44.1 kHz</option><option value="48000" selected>48 kHz</option><option value="96000">96 kHz</option></select></div>
     </div>
 
-    <button id="mainBtn" onclick="processBatch()">GENERAR WAV</button>
+    <button id="mainBtn" onclick="processBatch()">Generar Archivos</button>
     <div class="footer">SIGNAL GENERATOR // OSC_LAB PROTOCOL</div>
 </div>
 
@@ -175,7 +175,7 @@ async function processBatch() {
         const content = await zip.generateAsync({type:"blob"});
         downloadBlob(content, `LTC_Bundle(${numFiles}files at ${fpsVal}${syncModeVal}) | oscLAB.zip`);
     }
-    btn.disabled = false; btn.innerText = "GENERAR WAV";
+    btn.disabled = false; btn.innerText = "Generar Archivos";
 }
 
 function generateAudio(startF, dur, sr, bitDepth, isDF, fps) {
