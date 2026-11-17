@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LTC → MTC | osc[AV]lab</title>
+    <link rel="icon" type="image/png" href="assets/logo-oscavlab.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;700&family=Roboto+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        /* osc[AV]lab — paleta V_2026 */
+        :root {
+            --paper: #F4F1EA; --paper-soft: #ECE8DF;
+            --ink: #0D0D0C; --ink-soft: #26241F;
+            --turq: #00B3A4; --turq-deep: #007A6F; --turq-soft: #A8E6DF;
+            --mute: #7A766D;
+            --accent: var(--turq); --bg: var(--ink); --card: #151513; --line: #2E2C27;
+            --font-family: 'Roboto', sans-serif; --mono: 'Roboto Mono', monospace;
+        }
+        body { font-family: var(--font-family); font-weight: 300; background: var(--bg); color: var(--paper); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 10px; box-sizing: border-box; }
+        .card { background: var(--card); padding: 2rem 2.5rem; width: 100%; max-width: 1180px; border: 1px solid var(--line); border-top: 2px solid var(--turq); box-shadow: 0 20px 40px rgba(0,0,0,0.5); box-sizing: border-box; border-radius: 0; }
+        .brand { display: flex; align-items: center; justify-content: space-between; gap: 1rem; border-bottom: 1px solid var(--line); padding-bottom: 1.2rem; margin-bottom: 1.8rem; }
+        .brand img { display: block; width: 170px; height: auto; opacity: 0.9; }
+        h1 { color: var(--turq); margin: 0; font-family: var(--mono); font-size: 0.8rem; letter-spacing: 4px; font-weight: 400; text-transform: uppercase; }
+        h2 { color: var(--turq); margin: 0 0 1.1rem; font-family: var(--mono); font-size: 0.66rem; letter-spacing: 3px; font-weight: 400; text-transform: uppercase; padding-bottom: 0.6rem; border-bottom: 1px solid var(--line); }
+        .panels { display: grid; grid-template-columns: 1.35fr 1fr 1fr; gap: 2rem; }
+        .panel { min-width: 0; }
+        .actions { display: flex; align-items: center; justify-content: space-between; gap: 2rem; border-top: 1px solid var(--line); margin-top: 0.8rem; padding-top: 1.5rem; }
+        .actions button { width: auto; min-width: 320px; margin-top: 0; }
+        label { display: block; font-family: var(--mono); font-size: 0.62rem; color: var(--mute); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 400; }
+        .time-group { display: flex; align-items: center; gap: 5px; margin-bottom: 1.2rem; }
+        .time-box { flex: 1; display: flex; flex-direction: column; align-items: center; }
+        input[type=number] { width: 100%; text-align: center; padding: 0.8rem 0; background: var(--ink); border: 1px solid var(--line); color: var(--paper); font-family: var(--mono); font-size: 1.1rem; border-radius: 0; outline: none; font-weight: 300; transition: border-color 0.2s; }
+        input[type=number]:focus, select:focus { border-color: var(--turq); }
+        .time-box span, .unit-label span { font-family: var(--mono); font-size: 0.58rem; color: var(--mute); margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+        .separator { color: var(--turq); font-weight: 700; margin-bottom: 18px; }
+        select { width: 100%; padding: 0.8rem 0.5rem; font-size: 0.85rem; background: var(--ink); border: 1px solid var(--line); color: var(--paper); border-radius: 0; margin-bottom: 1.2rem; font-family: var(--mono); outline: none; font-weight: 300; }
+        select:disabled { color: var(--mute); }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        button { width: 100%; padding: 1.1rem; font-family: var(--mono); font-size: 1rem; font-weight: 500; letter-spacing: 3px; background: var(--turq); border: none; color: var(--ink); border-radius: 0; cursor: pointer; transition: 0.2s; margin-top: 10px; text-transform: uppercase; }
+        button:hover { background: var(--turq-soft); }
+        button:active { background: var(--turq-deep); color: var(--paper); }
+        button:disabled { background: var(--ink-soft); color: var(--mute); cursor: wait; }
+        .footer { font-family: var(--mono); font-size: 0.58rem; color: var(--mute); letter-spacing: 2px; }
+        .footer b { color: var(--turq); font-weight: 400; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+        /* Tablet: 2 columnas, Multi-Export a lo ancho */
+        @media (max-width: 1000px) {
+            .panels { grid-template-columns: 1fr 1fr; }
+            .panels .panel:first-child { grid-column: 1 / -1; }
+        }
+        /* Móvil: todo apilado */
+        @media (max-width: 680px) {
+            .card { padding: 1.5rem 1.2rem; }
+            .panels { grid-template-columns: 1fr; gap: 1.2rem; }
+            .brand { flex-direction: column; text-align: center; }
+            .brand img { width: 160px; }
+            .actions { flex-direction: column-reverse; gap: 1.2rem; }
+            .actions button { width: 100%; min-width: 0; }
+            .footer { text-align: center; }
+        }
+        /* ---- LTC → MTC ---- */
+        .tabs { display: flex; gap: 0; border: 1px solid var(--line); }
+        .tabs a { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 2px; text-transform: uppercase; color: var(--mute); text-decoration: none; padding: 0.6rem 1rem; }
+        .tabs a:hover { color: var(--paper); }
+        .tabs a.on { background: var(--turq); color: var(--ink); }
+        .tc-wrap { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.8rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--line); }
+        .tc { font-family: var(--mono); font-weight: 300; font-size: clamp(2.4rem, 7vw, 4.6rem); letter-spacing: 2px; color: var(--paper); font-variant-numeric: tabular-nums; }
+        .tc-status { display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; font-family: var(--mono); font-size: 0.7rem; color: var(--mute); letter-spacing: 1px; }
+        .pill { border: 1px solid var(--line); padding: 0.35rem 0.8rem; letter-spacing: 2px; color: var(--mute); }
+        .pill.ok { border-color: var(--turq); color: var(--turq); }
+        .seg { display: grid; grid-template-columns: 1fr 1fr; margin-bottom: 1.2rem; border: 1px solid var(--line); }
+        button.ghost, .segbtn { width: 100%; margin: 0 0 1.2rem; padding: 0.75rem; font-size: 0.68rem; letter-spacing: 2px; background: transparent; color: var(--paper); border: 1px solid var(--line); }
+        button.ghost:hover, .segbtn:hover { background: var(--ink-soft); }
+        .segbtn { margin: 0; border: none; color: var(--mute); }
+        .segbtn.on { background: var(--turq); color: var(--ink); }
+        .btn3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .meter { height: 10px; background: var(--ink); border: 1px solid var(--line); margin-top: 0.2rem; }
+        .meter div { height: 100%; width: 0; background: var(--turq); transition: width 60ms linear; }
+        .hint { display: block; font-family: var(--mono); font-size: 0.6rem; color: var(--mute); margin-top: 0.4rem; letter-spacing: 1px; line-height: 1.6; }
+        .stats { font-family: var(--mono); font-size: 0.62rem; color: var(--mute); letter-spacing: 1px; }
+        .guide ol { margin: 0; padding-left: 1.1rem; font-size: 0.85rem; line-height: 1.6; color: var(--paper-soft); }
+        .guide li { margin-bottom: 0.5rem; }
+        .guide b { color: var(--turq); font-weight: 400; }
+        .panel input[type=number] { margin-bottom: 0; }
+        @media (max-width: 680px) { .tc-status { align-items: flex-start; } .brand { gap: 1rem; } }
+        .brand-l { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+        @media (max-width: 680px) { .brand-l { flex-direction: column; gap: 0.8rem; } }
+    </style>
+
+</head>
+<body>
+
+<div class="card">
+    <header class="brand">
+        <div class="brand-l">
+            <img src="assets/logo-oscavlab.png" alt="osc[AV]lab">
+            <h1>LTC → MTC</h1>
+        </div>
+        <nav class="tabs">
+            <a href="./">Generar LTC</a>
+            <a href="mtc.html" class="on">LTC → MTC</a>
+        </nav>
+    </header>
+
+    <div class="tc-wrap">
+        <div class="tc" id="tcDisplay">00:00:00:00</div>
+        <div class="tc-status">
+            <span class="pill" id="stLock">PARADO</span>
+            <span id="stRate">—</span>
+            <span id="stInfo"></span>
+        </div>
+    </div>
+
+    <div class="panels">
+        <section class="panel">
+            <h2>Fuente</h2>
+            <div class="seg">
+                <button type="button" class="segbtn on" data-mode="ltc">LTC por audio</button>
+                <button type="button" class="segbtn" data-mode="gen">Generador interno</button>
+            </div>
+
+            <div id="srcLtc">
+                <label>Entrada de audio</label>
+                <select id="audioIn"><option value="">(pulsa Escuchar para listar)</option></select>
+                <div class="row">
+                    <div>
+                        <label>Canal</label>
+                        <select id="audioCh">
+                            <option value="0">1 / L</option><option value="1">2 / R</option>
+                            <option value="2">3</option><option value="3">4</option>
+                            <option value="4">5</option><option value="5">6</option>
+                            <option value="6">7</option><option value="7">8</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Nivel</label>
+                        <div class="meter"><div id="meterBar"></div></div>
+                        <span class="hint" id="meterTxt">—</span>
+                    </div>
+                </div>
+                <button type="button" class="ghost" id="btnListen">Escuchar</button>
+            </div>
+
+            <div id="srcGen" hidden>
+                <label>Inicio</label>
+                <div class="time-group">
+                    <div class="time-box"><input type="number" id="gH" value="0"><span>Horas</span></div><div class="separator">:</div>
+                    <div class="time-box"><input type="number" id="gM" value="0"><span>Min</span></div><div class="separator">:</div>
+                    <div class="time-box"><input type="number" id="gS" value="0"><span>Seg</span></div><div class="separator">:</div>
+                    <div class="time-box"><input type="number" id="gF" value="0"><span>Frames</span></div>
+                </div>
+                <label>Frame rate</label>
+                <select id="gRate">
+                    <option value="23.976">23.976</option>
+                    <option value="24">24</option>
+                    <option value="25" selected>25</option>
+                    <option value="29.97DF">29.97 Drop (DF)</option>
+                    <option value="29.97ND">29.97 Non-Drop</option>
+                    <option value="30">30</option>
+                </select>
+                <div class="btn3">
+                    <button type="button" class="ghost" id="btnPlay">▶ Play</button>
+                    <button type="button" class="ghost" id="btnPause">❚❚ Pausa</button>
+                    <button type="button" class="ghost" id="btnStop">■ Stop</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>Salida MTC</h2>
+            <label>Puerto MIDI</label>
+            <select id="midiOut"><option value="">(sin acceso MIDI todavía)</option></select>
+            <div class="row">
+                <div>
+                    <label>Rate MTC</label>
+                    <select id="mtcRate">
+                        <option value="auto" selected>Auto</option>
+                        <option value="24">24</option>
+                        <option value="25">25</option>
+                        <option value="29.97DF">29.97 Drop</option>
+                        <option value="30">30 (y 29.97 ND)</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Freewheel</label>
+                    <select id="freewheel">
+                        <option value="4">4 frames</option>
+                        <option value="10" selected>10 frames</option>
+                        <option value="25">1 s</option>
+                        <option value="75">3 s</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div>
+                    <label>Compensación (ms)</label>
+                    <input type="number" id="offsetMs" value="0" step="1">
+                </div>
+                <div>
+                    <label>Full Frame</label>
+                    <button type="button" class="ghost" id="btnFF">Enviar ahora</button>
+                </div>
+            </div>
+            <div class="stats" id="stats">QF enviados: 0 · Full Frames: 0</div>
+        </section>
+
+        <section class="panel guide">
+            <h2>Ableton Live</h2>
+            <ol>
+                <li>Elige como salida el <b>IAC Driver</b> (Mac, mismo ordenador) o tu interfaz MIDI.</li>
+                <li>En Live: <i>Settings › Link, Tempo &amp; MIDI</i>, selecciona ese puerto y pon <b>MIDI Sync Type = MIDI Timecode</b>.</li>
+                <li><b>MIDI Timecode Rate</b>: el mismo que muestra arriba (o <i>SMPTE All</i>).</li>
+                <li><b>MIDI Timecode Offset</b>: la hora del LTC que corresponde al compás 1 (ej. 01:00:00:00).</li>
+                <li>Activa <b>EXT</b> en la barra de control. Live sigue la posición; el tempo lo pones tú.</li>
+            </ol>
+            <p class="hint">Necesita Chrome o Edge (Web MIDI). Desactiva cualquier procesado de la entrada de audio.</p>
+        </section>
+    </div>
+
+    <div class="actions">
+        <div class="footer">LTC → MTC // <b>osc[AV]lab</b> PROTOCOL</div>
+    </div>
+</div>
+
+<script>
+// ===== osc[AV]lab LTC → MTC =====
+// LTC por audio (AudioWorklet, decodificación biphase) o generador interno
+// → reloj con PLL + freewheel → MTC regenerado (quarter frames con timestamp + Full Frame) por Web MIDI.
+
+const RATES = {
+    '23.976':  { n: 24, real: 24000 / 1001, df: false, code: 0, label: '23.976' },
+    '24':      { n: 24, real: 24,           df: false, code: 0, label: '24' },
+    '25':      { n: 25, real: 25,           df: false, code: 1, label: '25' },
+    '29.97DF': { n: 30, real: 30000 / 1001, df: true,  code: 2, label: '29.97 DF' },
+    '29.97ND': { n: 30, real: 30000 / 1001, df: false, code: 3, label: '29.97 ND' },
+    '30':      { n: 30, real: 30,           df: false, code: 3, label: '30' },
+};
+
+function dayFrames(r) { return r.df ? 17982 * 144 : 24 * 3600 * r.n; }
+function labelToAbs(h, m, s, f, r) {
+    let a = (h * 3600 + m * 60 + s) * r.n + f;
+    if (r.df) { const tm = h * 60 + m; a -= 2 * (tm - Math.floor(tm / 10)); }
+    return a;
+}
+function absToLabel(a, r) {
+    const day = dayFrames(r);
+    a = ((Math.floor(a) % day) + day) % day;
+    if (r.df) {
+        const D = Math.floor(a / 17982), M = a % 17982;
+        a += 18 * D + (M > 1 ? 2 * Math.floor((M - 2) / 1798) : 0);
+    }
+    const n = r.n;
+    return { h: Math.floor(a / (n * 3600)) % 24, m: Math.floor(a / (n * 60)) % 60, s: Math.floor(a / n) % 60, f: a % n };
+}
+const p2 = v => String(v).padStart(2, '0');
+function fmt(l, df) { return `${p2(l.h)}:${p2(l.m)}:${p2(l.s)}${df ? ';' : ':'}${p2(l.f)}`; }
+
+// ---------- Decodificador LTC (AudioWorklet) ----------
+const LTC_WORKLET_SRC = `
+class LTCDecoder extends AudioWorkletProcessor {
+  constructor() {
+    super();
+    this.ch = 0; this.sign = 0; this.last = 0; this.half = false;
+    this.Tmin = sampleRate / (80 * 36); this.Tmax = sampleRate / (80 * 20);
+    this.T = sampleRate / (80 * 27);
+    this.bits = new Uint8Array(80); this.peak = 0; this.lvl = 0; this.lvlN = 0; this.lastSync = -1;
+    this.port.onmessage = e => { if (e.data && e.data.ch !== undefined) this.ch = e.data.ch; };
+  }
+  pushBit(b, at) {
+    const B = this.bits; B.copyWithin(0, 1); B[79] = b;
+    if (B[64] | B[65] | !B[66] | !B[67] | !B[68] | !B[69] | !B[70] | !B[71] | !B[72] | !B[73] | !B[74] | !B[75] | !B[76] | !B[77] | B[78] | !B[79]) return;
+    const v = (s, l) => { let x = 0; for (let i = 0; i < l; i++) x |= B[s + i] << i; return x; };
+    const f = v(0, 4) + 10 * v(8, 2), s = v(16, 4) + 10 * v(24, 3), m = v(32, 4) + 10 * v(40, 3), h = v(48, 4) + 10 * v(56, 2);
+    const period = this.lastSync >= 0 ? at - this.lastSync : 0; this.lastSync = at;
+    if (f > 29 || s > 59 || m > 59 || h > 23) return;
+    // fin del frame = medio bit después de la última transición del bit 79
+    this.port.postMessage({ t: 'f', h, m, s, f, df: B[10], end: (at + this.T / 2) / sampleRate, period: period / sampleRate });
+  }
+  process(inputs) {
+    const inp = inputs[0];
+    if (!inp || !inp.length) return true;
+    const x = inp[Math.min(this.ch, inp.length - 1)];
+    const base = currentFrame;
+    for (let i = 0; i < x.length; i++) {
+      const v = x[i], a = v < 0 ? -v : v;
+      this.peak = a > this.peak ? a : this.peak * 0.99995;
+      if (a > this.lvl) this.lvl = a;
+      const th = Math.max(0.002, this.peak * 0.25);
+      let flip = false;
+      if (this.sign >= 0 && v < -th) { this.sign = -1; flip = true; }
+      else if (this.sign <= 0 && v > th) { this.sign = 1; flip = true; }
+      if (!flip) continue;
+      const idx = base + i, iv = idx - this.last; this.last = idx;
+      const T = this.T;
+      if (iv < 0.3 * this.Tmin) continue;
+      if (iv < 0.75 * T) {                       // medio bit
+        this.T += 0.05 * (2 * iv - T);
+        if (this.half) { this.half = false; this.pushBit(1, idx); } else this.half = true;
+      } else if (iv < 1.5 * T) {                 // bit completo = 0
+        this.T += 0.05 * (iv - T);
+        this.half = false; this.pushBit(0, idx);
+      } else {                                   // hueco / glitch
+        this.half = false;
+        if (iv < 2.5 * T) this.T += 0.05 * (iv - T);
+      }
+      if (this.T < this.Tmin) this.T = this.Tmin; else if (this.T > this.Tmax) this.T = this.Tmax;
+    }
+    this.lvlN += x.length;
+    if (this.lvlN > sampleRate / 15) { this.port.postMessage({ t: 'lvl', v: this.lvl }); this.lvl = 0; this.lvlN = 0; }
+    return true;
+  }
+}
+registerProcessor('ltc-decoder', LTCDecoder);
+`;
+
+// ---------- Estado ----------
+const $ = id => document.getElementById(id);
+let mode = 'ltc';
+let midi = null, out = null;
+let audioCtx = null, stream = null, node = null;
+const clock = { running: false, pos0: 0, t0: 0, rate: 0, nominal: 0, key: '25' };
+let nextQ = 0, qfCount = 0, ffCount = 0;
+const LOOKAHEAD = 40; // ms
+// LTC
+const ltc = { lastAbs: null, good: 0, lastPerf: 0, maxF: 0, sawWrap: false, df: 0, periods: [], label: null, errs: [] };
+// Generador
+const gen = { pos: 0 };
+
+// ---------- MIDI ----------
+function midiSend(bytes, t) {
+    if (window.__mtcTap) window.__mtcTap(bytes, t);
+    if (out) { try { out.send(bytes, t); } catch (e) { console.warn(e); } }
+}
+function rateForMtc() {
+    const sel = $('mtcRate').value;
+    if (sel !== 'auto') return RATES[sel];
+    return RATES[clock.key];
+}
+function sendFullFrame(abs) {
+    const r = RATES[clock.key], l = absToLabel(abs, r), code = rateForMtc().code;
+    midiSend([0xF0, 0x7F, 0x7F, 0x01, 0x01, (code << 5) | l.h, l.m, l.s, l.f, 0xF7], performance.now());
+    ffCount++;
+}
+function sendQF(q, t) {
+    const r = RATES[clock.key], piece = ((q % 8) + 8) % 8;
+    const l = absToLabel(Math.floor(q / 8) * 2, r), code = rateForMtc().code;
+    const nib = [l.f & 15, l.f >> 4, l.s & 15, l.s >> 4, l.m & 15, l.m >> 4, l.h & 15, ((l.h >> 4) & 1) | (code << 1)][piece];
+    midiSend([0xF1, (piece << 4) | nib], t);
+    qfCount++;
+}
+
+// ---------- Reloj ----------
+const posAt = t => clock.pos0 + (t - clock.t0) * clock.rate;
+function hardLocate(pos, t, key) {
+    clock.key = key;
+    clock.nominal = RATES[key].real / 1000;
+    clock.rate = clock.nominal;
+    clock.pos0 = pos; clock.t0 = t; clock.running = true;
+    if (out && out.clear) { try { out.clear(); } catch (e) {} }
+    const now = performance.now();
+    sendFullFrame(Math.floor(posAt(now)));
+    let q = Math.ceil(posAt(now + 2) * 4);
+    while (((q % 8) + 8) % 8 !== 0) q++;   // pieza 0 siempre en frame par
+    nextQ = q;
+}
+function stopClock(reason) {
+    if (clock.running) gen.pos = posAt(performance.now());
+    clock.running = false;
+    setLock(reason || 'PARADO', false);
+}
+function tick() {
+    const now = performance.now();
+    if (mode === 'ltc' && clock.running) {
+        const fwMs = parseInt($('freewheel').value) * 1000 / RATES[clock.key].real;
+        if (now - ltc.lastPerf > fwMs + 60) { stopClock('SIN SEÑAL'); ltc.good = 0; }
+        else if (now - ltc.lastPerf > 80) setLock('FREEWHEEL', true);
+    }
+    if (!clock.running) return;
+    const horizon = now + LOOKAHEAD;
+    for (let guard = 0; guard < 64; guard++) {
+        const t = clock.t0 + (nextQ / 4 - clock.pos0) / clock.rate;
+        if (t > horizon) break;
+        sendQF(nextQ, Math.max(t, now));
+        nextQ++;
+    }
+}
+setInterval(tick, 5);
+
+// ---------- LTC: frames decodificados ----------
+function ctxToPerf(ctxTime) {
+    const ts = audioCtx.getOutputTimestamp();
+    if (ts && ts.performanceTime) return ts.performanceTime + (ctxTime - ts.contextTime) * 1000;
+    return performance.now() - (audioCtx.currentTime - ctxTime) * 1000;
+}
+function detectKey() {
+    const ps = ltc.periods; if (!ps.length) return null;
+    const fps = ps.length / ps.reduce((a, b) => a + b, 0);
+    const mf = ltc.maxF;
+    if (mf >= 29 || (!ltc.sawWrap && fps > 27.5)) {
+        if (ltc.df) return '29.97DF';
+        return fps < 29.985 ? '29.97ND' : '30';
+    }
+    if (mf === 24 || (!ltc.sawWrap && fps > 24.5)) return '25';
+    return fps < 23.988 ? '23.976' : '24';
+}
+function onLtcFrame(d, perfOverride) {
+    if (d.period > 0.02 && d.period < 0.06) { ltc.periods.push(d.period); if (ltc.periods.length > 50) ltc.periods.shift(); }
+    if (ltc.label && d.f === 0 && ltc.label.f > 0) ltc.sawWrap = true;
+    ltc.maxF = Math.max(ltc.maxF, d.f);
+    ltc.df = d.df; ltc.label = d;
+    const key = detectKey(); if (!key) return;
+    const r = RATES[key];
+    const abs = labelToAbs(d.h, d.m, d.s, d.f, r) + 1; // posición al final del frame
+    const day = dayFrames(r), wrap = x => ((x % day) + day * 1.5) % day - day / 2; // cruce de medianoche
+    ltc.good = (ltc.lastAbs !== null && wrap(abs - ltc.lastAbs) === 1) ? ltc.good + 1 : 0;
+    ltc.lastAbs = abs;
+    const tP = (perfOverride !== undefined ? perfOverride : ctxToPerf(d.end)) + (parseFloat($('offsetMs').value) || 0);
+    ltc.lastPerf = performance.now();
+    if (!clock.running) {
+        if (ltc.good >= 3 && ltc.sawWrap) { hardLocate(abs, tP, key); setLock('LOCK', true); }
+        return;
+    }
+    const err = wrap(abs - posAt(tP));
+    if (key !== clock.key || Math.abs(err) > 1.5) {
+        if (ltc.good >= 2) { hardLocate(abs, tP, key); setLock('RELOCATE', true); }
+        return;
+    }
+    // PLL de 2º orden: fase suave + seguimiento de velocidad (varispeed)
+    const frameMs = 1000 / RATES[key].real;
+    clock.pos0 = posAt(tP) + 0.12 * err; clock.t0 = tP;
+    clock.rate += 0.01 * err / frameMs;
+    const lo = clock.nominal * 0.9, hi = clock.nominal * 1.1;
+    clock.rate = Math.min(hi, Math.max(lo, clock.rate));
+    ltc.errs.push(err * frameMs); if (ltc.errs.length > 60) ltc.errs.shift();
+    setLock('LOCK', true);
+}
+
+async function startListening() {
+    try {
+        if (!audioCtx) {
+            audioCtx = new AudioContext({ latencyHint: 'interactive' });
+            const url = URL.createObjectURL(new Blob([LTC_WORKLET_SRC], { type: 'application/javascript' }));
+            await audioCtx.audioWorklet.addModule(url);
+        }
+        await audioCtx.resume();
+        if (stream) stream.getTracks().forEach(t => t.stop());
+        if (node) node.disconnect();
+        const devId = $('audioIn').value;
+        stream = await navigator.mediaDevices.getUserMedia({ audio: {
+            deviceId: devId ? { exact: devId } : undefined,
+            echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: { ideal: 8 } } });
+        await listAudioInputs(devId);
+        const src = audioCtx.createMediaStreamSource(stream);
+        node = new AudioWorkletNode(audioCtx, 'ltc-decoder', { numberOfInputs: 1, numberOfOutputs: 0, channelCount: src.channelCount, channelCountMode: 'explicit', channelInterpretation: 'discrete' });
+        node.port.postMessage({ ch: parseInt($('audioCh').value) });
+        node.port.onmessage = e => {
+            const d = e.data;
+            if (d.t === 'f') onLtcFrame(d);
+            else if (d.t === 'lvl') showLevel(d.v);
+        };
+        src.connect(node);
+        $('btnListen').textContent = 'Escuchando…';
+        setLock('BUSCANDO LTC', false);
+    } catch (e) {
+        setLock('ERROR AUDIO', false); $('stInfo').textContent = e.message;
+    }
+}
+async function listAudioInputs(selected) {
+    const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'audioinput');
+    const sel = $('audioIn'); sel.innerHTML = '';
+    devs.forEach(d => { const o = document.createElement('option'); o.value = d.deviceId; o.textContent = d.label || 'Entrada'; sel.appendChild(o); });
+    if (selected) sel.value = selected;
+}
+function showLevel(v) {
+    const db = v > 0 ? 20 * Math.log10(v) : -99;
+    $('meterBar').style.width = Math.max(0, Math.min(100, (db + 60) / 60 * 100)) + '%';
+    $('meterTxt').textContent = db > -90 ? db.toFixed(0) + ' dBFS' : '—';
+}
+
+// ---------- MIDI acceso ----------
+async function initMidi() {
+    if (!navigator.requestMIDIAccess) { $('midiOut').innerHTML = '<option>Este navegador no tiene Web MIDI (usa Chrome)</option>'; return; }
+    try {
+        midi = await navigator.requestMIDIAccess({ sysex: true });
+        const fill = () => {
+            const sel = $('midiOut'), cur = sel.value; sel.innerHTML = '<option value="">— elige salida —</option>';
+            midi.outputs.forEach(o => { const op = document.createElement('option'); op.value = o.id; op.textContent = o.name; sel.appendChild(op); });
+            if (cur) sel.value = cur;
+            const saved = safeGet('mtcOut'); if (!sel.value && saved) sel.value = saved;
+            out = sel.value ? midi.outputs.get(sel.value) : null;
+        };
+        fill(); midi.onstatechange = fill;
+    } catch (e) { $('midiOut').innerHTML = '<option>Permiso MIDI denegado</option>'; }
+}
+function safeGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function safeSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+
+// ---------- Generador ----------
+function genStartAbs() {
+    const r = RATES[$('gRate').value];
+    return labelToAbs(+$('gH').value || 0, +$('gM').value || 0, +$('gS').value || 0, +$('gF').value || 0, r);
+}
+
+// ---------- UI ----------
+function setLock(txt, ok) { const el = $('stLock'); el.textContent = txt; el.className = 'pill' + (ok ? ' ok' : ''); }
+function draw() {
+    const now = performance.now();
+    let txt = '00:00:00:00';
+    if (clock.running) {
+        const r = RATES[clock.key]; txt = fmt(absToLabel(Math.floor(posAt(now)), r), r.df);
+        const rm = rateForMtc();
+        $('stRate').textContent = `${r.label} fps → MTC ${['24', '25', '29.97 DF', '30'][rm.code]}`;
+        const e = ltc.errs; if (mode === 'ltc' && e.length > 5) {
+            const rms = Math.sqrt(e.reduce((a, b) => a + b * b, 0) / e.length);
+            $('stInfo').textContent = `jitter LTC ${rms.toFixed(2)} ms · velocidad ${(clock.rate / clock.nominal * 100).toFixed(2)}%`;
+        } else if (mode === 'gen') $('stInfo').textContent = '';
+    } else if (mode === 'gen') {
+        const r = RATES[$('gRate').value]; txt = fmt(absToLabel(gen.pos, r), r.df);
+    } else if (ltc.label) {
+        const d = ltc.label; txt = `${p2(d.h)}:${p2(d.m)}:${p2(d.s)}${d.df ? ';' : ':'}${p2(d.f)}`;
+    }
+    $('tcDisplay').textContent = txt;
+    $('stats').textContent = `QF enviados: ${qfCount} · Full Frames: ${ffCount}`;
+    requestAnimationFrame(draw);
+}
+
+document.querySelectorAll('.segbtn').forEach(b => b.onclick = () => {
+    document.querySelectorAll('.segbtn').forEach(x => x.classList.toggle('on', x === b));
+    mode = b.dataset.mode; stopClock();
+    $('srcLtc').hidden = mode !== 'ltc'; $('srcGen').hidden = mode !== 'gen';
+    if (mode === 'gen') gen.pos = genStartAbs();
+});
+$('btnListen').onclick = startListening;
+$('audioIn').onchange = () => { if (audioCtx) startListening(); };
+$('audioCh').onchange = () => { if (node) node.port.postMessage({ ch: parseInt($('audioCh').value) }); };
+$('midiOut').onchange = () => { out = midi && $('midiOut').value ? midi.outputs.get($('midiOut').value) : null; safeSet('mtcOut', $('midiOut').value); };
+$('btnFF').onclick = () => { if (clock.running) sendFullFrame(Math.floor(posAt(performance.now()))); else { clock.key = mode === 'gen' ? $('gRate').value : clock.key; sendFullFrame(mode === 'gen' ? gen.pos : (ltc.lastAbs || 0)); } };
+$('btnPlay').onclick = () => { if (!clock.running) { hardLocate(gen.pos, performance.now(), $('gRate').value); setLock('PLAY', true); } };
+$('btnPause').onclick = () => { if (clock.running) { stopClock('PAUSA'); } };
+$('btnStop').onclick = () => { stopClock('STOP'); gen.pos = genStartAbs(); clock.key = $('gRate').value; sendFullFrame(gen.pos); };
+['gH', 'gM', 'gS', 'gF', 'gRate'].forEach(id => $(id).onchange = () => { if (!clock.running) gen.pos = genStartAbs(); });
+
+window.__ltc = { RATES, labelToAbs, absToLabel, LTC_WORKLET_SRC, onLtcFrame, clock, ltc, posAt, hardLocate };
+initMidi();
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>
