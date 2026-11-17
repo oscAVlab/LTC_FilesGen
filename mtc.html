@@ -276,8 +276,8 @@ class LTCDecoder extends AudioWorkletProcessor {
     const f = v(0, 4) + 10 * v(8, 2), s = v(16, 4) + 10 * v(24, 3), m = v(32, 4) + 10 * v(40, 3), h = v(48, 4) + 10 * v(56, 2);
     const period = this.lastSync >= 0 ? at - this.lastSync : 0; this.lastSync = at;
     if (f > 29 || s > 59 || m > 59 || h > 23) return;
-    // fin del frame = medio bit después de la última transición del bit 79
-    this.port.postMessage({ t: 'f', h, m, s, f, df: B[10], end: (at + this.T / 2) / sampleRate, period: period / sampleRate });
+    // el bit 79 se cierra con el flanco que inicia el frame siguiente = fin del frame
+    this.port.postMessage({ t: 'f', h, m, s, f, df: B[10], end: at / sampleRate, period: period / sampleRate });
   }
   process(inputs) {
     const inp = inputs[0];
@@ -305,6 +305,7 @@ class LTCDecoder extends AudioWorkletProcessor {
       } else {                                   // hueco / glitch
         this.half = false;
         if (iv < 2.5 * T) this.T += 0.05 * (iv - T);
+        else this.bits.fill(2);                  // hueco: descarta lo acumulado
       }
       if (this.T < this.Tmin) this.T = this.Tmin; else if (this.T > this.Tmax) this.T = this.Tmax;
     }
