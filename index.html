@@ -3,29 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LTC Generator v1 | OSC_lab</title>
+    <title>LTC Generator v1 | osc[AV]lab</title>
+    <link rel="icon" type="image/png" href="assets/logo-oscavlab.png">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;700&family=Roboto+Mono:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
-        :root { --accent: #00ffcc; --bg: #0f1115; --card: #1c1e26; --font-family: 'Roboto', sans-serif; }
-        body { font-family: var(--font-family); font-weight: 100; background: var(--bg); color: #e1e1e6; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 10px; }
-        .card { background: var(--card); padding: 2.5rem; width: 100%; max-width: 440px; border: 1px solid #2d303d; box-shadow: 0 20px 40px rgba(0,0,0,0.4); box-sizing: border-box; border-radius: 0; }
-        h1 { color: var(--accent); margin: 0 0 1.5rem; font-size: 1rem; text-align: center; letter-spacing: 3px; border-bottom: 1px solid #2d303d; padding-bottom: 1rem; font-weight: 100; }
-        label { display: block; font-size: 0.65rem; color: #ffffff; margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 100; }
+        /* osc[AV]lab — paleta V_2026 */
+        :root {
+            --paper: #F4F1EA; --paper-soft: #ECE8DF;
+            --ink: #0D0D0C; --ink-soft: #26241F;
+            --turq: #00B3A4; --turq-deep: #007A6F; --turq-soft: #A8E6DF;
+            --mute: #7A766D;
+            --accent: var(--turq); --bg: var(--ink); --card: #151513; --line: #2E2C27;
+            --font-family: 'Roboto', sans-serif; --mono: 'Roboto Mono', monospace;
+        }
+        body { font-family: var(--font-family); font-weight: 300; background: var(--bg); color: var(--paper); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 10px; box-sizing: border-box; }
+        .card { background: var(--card); padding: 2.5rem; width: 100%; max-width: 440px; border: 1px solid var(--line); border-top: 2px solid var(--turq); box-shadow: 0 20px 40px rgba(0,0,0,0.5); box-sizing: border-box; border-radius: 0; }
+        .brand { text-align: center; border-bottom: 1px solid var(--line); padding-bottom: 1.2rem; margin-bottom: 1.5rem; }
+        .brand img { display: block; width: 180px; max-width: 70%; height: auto; margin: 0 auto 0.9rem; opacity: 0.9; }
+        h1 { color: var(--turq); margin: 0; font-family: var(--mono); font-size: 0.75rem; text-align: center; letter-spacing: 4px; font-weight: 400; text-transform: uppercase; }
+        label { display: block; font-family: var(--mono); font-size: 0.62rem; color: var(--mute); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 400; }
         .time-group { display: flex; align-items: center; gap: 5px; margin-bottom: 1.2rem; }
         .time-box { flex: 1; display: flex; flex-direction: column; align-items: center; }
-        input[type=number] { width: 100%; text-align: center; padding: 0.8rem 0; background: #0f1115; border: 1px solid #2d303d; color: #fff; font-family: var(--font-family); font-size: 1.1rem; border-radius: 0; outline: none; font-weight: 100; }
-        .time-box span, .unit-label span { font-size: 0.65rem; color: rgba(255, 255, 255, 0.8); margin-top: 4px; text-transform: uppercase; }
-        .separator { color: var(--accent); font-weight: 700; margin-bottom: 18px; }
-        select { width: 100%; padding: 0.8rem; background: #0f1115; border: 1px solid #2d303d; color: #fff; border-radius: 0; margin-bottom: 1.2rem; font-family: var(--font-family); outline: none; font-weight: 100; }
+        input[type=number] { width: 100%; text-align: center; padding: 0.8rem 0; background: var(--ink); border: 1px solid var(--line); color: var(--paper); font-family: var(--mono); font-size: 1.1rem; border-radius: 0; outline: none; font-weight: 300; transition: border-color 0.2s; }
+        input[type=number]:focus, select:focus { border-color: var(--turq); }
+        .time-box span, .unit-label span { font-family: var(--mono); font-size: 0.58rem; color: var(--mute); margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+        .separator { color: var(--turq); font-weight: 700; margin-bottom: 18px; }
+        select { width: 100%; padding: 0.8rem; background: var(--ink); border: 1px solid var(--line); color: var(--paper); border-radius: 0; margin-bottom: 1.2rem; font-family: var(--mono); outline: none; font-weight: 300; }
+        select:disabled { color: var(--mute); }
         .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .multi-section { border-top: 1px solid #333; margin-top: 1rem; padding-top: 1rem; }
-        button { width: 100%; padding: 1.2rem; font-size: 1.25rem; font-weight: 700; background: var(--accent); border: none; color: #0f1115; border-radius: 8px; cursor: pointer; transition: 0.3s; margin-top: 10px; text-transform: uppercase; }
-        button:hover { background: #00e6b8; transform: translateY(-2px); }
-        button:disabled { background: #444; color: #888; cursor: wait; }
-        .footer { text-align: center; font-size: 0.6rem; color: #475569; margin-top: 2rem; letter-spacing: 1px; }
+        .multi-section { border-top: 1px solid var(--line); margin-top: 1rem; padding-top: 1rem; }
+        button { width: 100%; padding: 1.1rem; font-family: var(--mono); font-size: 1rem; font-weight: 500; letter-spacing: 3px; background: var(--turq); border: none; color: var(--ink); border-radius: 0; cursor: pointer; transition: 0.2s; margin-top: 10px; text-transform: uppercase; }
+        button:hover { background: var(--turq-soft); }
+        button:active { background: var(--turq-deep); color: var(--paper); }
+        button:disabled { background: var(--ink-soft); color: var(--mute); cursor: wait; }
+        .footer { text-align: center; font-family: var(--mono); font-size: 0.58rem; color: var(--mute); margin-top: 2rem; letter-spacing: 2px; }
+        .footer b { color: var(--turq); font-weight: 400; }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
     </style>
@@ -33,7 +48,10 @@
 <body>
 
 <div class="card">
-    <h1>LTC Generator v1 | OSC_lab</h1>
+    <div class="brand">
+        <img src="assets/logo-oscavlab.png" alt="osc[AV]lab">
+        <h1>LTC Generator v1</h1>
+    </div>
     
     <label>Offset Inicial</label>
     <div class="time-group">
@@ -95,7 +113,7 @@
     </div>
 
     <button id="mainBtn" onclick="processBatch()">Generar Archivos</button>
-    <div class="footer">SIGNAL GENERATOR // OSC_LAB PROTOCOL</div>
+    <div class="footer">SIGNAL GENERATOR // <b>osc[AV]lab</b> PROTOCOL</div>
 </div>
 
 <script>
