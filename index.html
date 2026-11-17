@@ -27,6 +27,10 @@
         h2 { color: var(--turq); margin: 0 0 1.1rem; font-family: var(--mono); font-size: 0.66rem; letter-spacing: 3px; font-weight: 400; text-transform: uppercase; padding-bottom: 0.6rem; border-bottom: 1px solid var(--line); }
         .panels { display: grid; grid-template-columns: 1.35fr 1fr 1fr; gap: 2rem; }
         .panel { min-width: 0; }
+        .tabs { display: flex; border: 1px solid var(--line); }
+        .tabs a { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 2px; text-transform: uppercase; color: var(--mute); text-decoration: none; padding: 0.6rem 1rem; }
+        .tabs a:hover { color: var(--paper); }
+        .tabs a.on { background: var(--turq); color: var(--ink); }
         .actions { display: flex; align-items: center; justify-content: space-between; gap: 2rem; border-top: 1px solid var(--line); margin-top: 0.8rem; padding-top: 1.5rem; }
         .actions button { width: auto; min-width: 320px; margin-top: 0; }
         label { display: block; font-family: var(--mono); font-size: 0.62rem; color: var(--mute); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 400; }
@@ -62,14 +66,22 @@
             .actions button { width: 100%; min-width: 0; }
             .footer { text-align: center; }
         }
+        .brand-l { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+        @media (max-width: 680px) { .brand-l { flex-direction: column; gap: 0.8rem; } }
     </style>
 </head>
 <body>
 
 <div class="card">
     <header class="brand">
-        <img src="assets/logo-oscavlab.png" alt="osc[AV]lab">
-        <h1>LTC Generator v1</h1>
+        <div class="brand-l">
+            <img src="assets/logo-oscavlab.png" alt="osc[AV]lab">
+            <h1>LTC Generator v1</h1>
+        </div>
+        <nav class="tabs">
+            <a href="./" class="on">Generar LTC</a>
+            <a href="mtc.html">LTC → MTC</a>
+        </nav>
     </header>
 
     <div class="panels">
@@ -249,7 +261,7 @@ function buildBits(fIdx, fps, isDF) {
     if (isDF && fps === 30) {
         const drop = 2, fPM = 1798, fP10M = 17982;
         const d = Math.floor(fIdx / fP10M), m = fIdx % fP10M;
-        fIdx += (9 * drop * d) + (drop * Math.floor((m - drop) / fPM));
+        fIdx += (9 * drop * d) + (m > 1 ? drop * Math.floor((m - drop) / fPM) : 0);
     }
     const ff = fIdx % fps, ss = Math.floor(fIdx / fps) % 60;
     const mm = Math.floor(fIdx / (fps * 60)) % 60, hh = Math.floor(fIdx / (fps * 3600)) % 24;
