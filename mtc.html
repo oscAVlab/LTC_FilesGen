@@ -324,7 +324,7 @@ let midi = null, out = null;
 let audioCtx = null, stream = null, node = null;
 const clock = { running: false, pos0: 0, t0: 0, rate: 0, nominal: 0, key: '25' };
 let nextQ = 0, qfCount = 0, ffCount = 0;
-const LOOKAHEAD = 40; // ms
+const LOOKAHEAD = 100; // ms: los QF se programan con timestamp, así un hueco del navegador no corta el MTC
 // LTC
 const ltc = { lastAbs: null, good: 0, lastPerf: 0, maxF: 0, sawWrap: false, df: 0, periods: [], label: null, errs: [] };
 // Generador
@@ -388,7 +388,18 @@ function tick() {
         nextQ++;
     }
 }
-setInterval(tick, 5);
+// Reloj del planificador en un Web Worker: Chrome frena los setInterval de la pestaña
+// cuando no está en primer plano (al pasar a Ableton), pero no los mensajes de un worker.
+(function startTicker() {
+    try {
+        const w = new Worker(URL.createObjectURL(new Blob(['setInterval(function(){postMessage(0)},5);'], { type: 'application/javascript' })));
+        w.onmessage = tick;
+        window.__ticker = 'worker';
+    } catch (e) {
+        setInterval(tick, 5);
+        window.__ticker = 'interval';
+    }
+})();
 
 // ---------- LTC: frames decodificados ----------
 function ctxToPerf(ctxTime) {
